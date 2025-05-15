@@ -7,7 +7,7 @@ from products.models import ProductColor, ProductColorDetail
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from users.models import Alamat
-from orders.models import Order, OrderItem, Ekspedisi, EkspedisiDetail, OrderPayment
+from orders.models import Order, OrderItem, Ekspedisi, EkspedisiDetail, OrderPayment, PaymentNotificationLog
 from django.db import transaction   
 from midtransclient import Snap
 from django.conf import settings
@@ -34,6 +34,13 @@ def payment_notification(request):
 
         # Verifikasi signature
         order_id = data.get('order_id')
+
+        # Simpan payload ke dalam log
+        PaymentNotificationLog.objects.create(
+            order_id=order_id,
+            payload=data
+        )
+        
         status_code = data.get('status_code')
 
         gross_amount_str = data.get('gross_amount', '0')
@@ -59,8 +66,6 @@ def payment_notification(request):
             if order_payment:
                 order_payment.transaction_status = data.get('transaction_status')
                 order_payment.status_message = data.get('status_message')
-                
-                
 
                 if transaction_status == 'settlement':
                     order_payment.settlement_time = data.get('settlement_time')

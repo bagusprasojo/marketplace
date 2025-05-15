@@ -21,6 +21,14 @@ class EkspedisiDetail(models.Model):
     def __str__(self):
         return f"{self.ekspedisi.name} - {self.name}"
 
+class PaymentNotificationLog(models.Model):
+    order_id = models.CharField(max_length=100)
+    payload = models.JSONField()  # menyimpan JSON mentah dari Midtrans
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for Order #{self.order_id} at {self.received_at}"
+    
 class OrderPayment(models.Model):
     order = models.ForeignKey('Order', related_name='payments', on_delete=models.CASCADE)
     transaction_time = models.DateTimeField()
@@ -33,7 +41,7 @@ class OrderPayment(models.Model):
     payment_type = models.CharField(max_length=50)
     merchant_id = models.CharField(max_length=20)
     gross_amount = models.PositiveIntegerField(default=0)
-    fraud_status = models.CharField(max_length=50)
+    fraud_status = models.CharField(max_length=50, null=True, blank=True)
     expiry_time = models.DateTimeField(null=True, blank=True)
     currency = models.CharField(max_length=10)
     biller_code = models.CharField(max_length=50, null=True, blank=True)
