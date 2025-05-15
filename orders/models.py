@@ -21,6 +21,33 @@ class EkspedisiDetail(models.Model):
     def __str__(self):
         return f"{self.ekspedisi.name} - {self.name}"
 
+class OrderPayment(models.Model):
+    order = models.ForeignKey('Order', related_name='payments', on_delete=models.CASCADE)
+    transaction_time = models.DateTimeField()
+    transaction_status = models.CharField(max_length=50)
+    transaction_id = models.CharField(max_length=100, unique=True)
+    status_message = models.CharField(max_length=255)
+    status_code = models.CharField(max_length=50)
+    signature_key = models.CharField(max_length=1024)
+    settlement_time = models.DateTimeField(null=True, blank=True)
+    payment_type = models.CharField(max_length=50)
+    merchant_id = models.CharField(max_length=20)
+    gross_amount = models.PositiveIntegerField(default=0)
+    fraud_status = models.CharField(max_length=50)
+    expiry_time = models.DateTimeField(null=True, blank=True)
+    currency = models.CharField(max_length=10)
+    biller_code = models.CharField(max_length=50, null=True, blank=True)
+    bill_key = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment for Order #{self.order.id} - {self.transaction_status}"
+
+    
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     alamat = models.ForeignKey(Alamat, on_delete=models.CASCADE, default=1)

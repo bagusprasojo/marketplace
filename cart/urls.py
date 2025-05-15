@@ -12,4 +12,5 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),  # contoh checkout
     path('order-success/', views.order_success, name='order_success'),  # contoh sukses checkout
     path('payment/<str:snap_token>/<int:order_id>/', views.payment_midtrans, name='payment'),
+    path('payment-notification/', views.payment_notification, name='payment_notification'),  # contoh notifikasi pembayaran
 ]

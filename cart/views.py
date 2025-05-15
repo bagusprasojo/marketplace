@@ -1,3 +1,4 @@
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import CartItem
@@ -6,10 +7,16 @@ from products.models import ProductColor, ProductColorDetail
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from users.models import Alamat
-from orders.models import Order, OrderItem, Ekspedisi, EkspedisiDetail
+from orders.models import Order, OrderItem, Ekspedisi, EkspedisiDetail, OrderPayment
 from django.db import transaction   
 from midtransclient import Snap
 from django.conf import settings
+import json
+import json
+from django.http import HttpResponse
+import hashlib
+import hmac
+import base64
 
 
 snap = Snap(
@@ -19,6 +26,76 @@ snap = Snap(
 )
 
 
+@csrf_exempt
+def payment_notification(request):
+    if request.method == 'POST':
+        raw_body = request.body.decode('utf-8')
+        data = json.loads(raw_body)
+
+        # Verifikasi signature
+        order_id = data.get('order_id')
+        status_code = data.get('status_code')
+
+        gross_amount_str = data.get('gross_amount', '0')
+        gross_amount = int(float(gross_amount_str))
+
+        signature_key = data.get('signature_key')
+
+        my_signature = hashlib.sha512(
+            (order_id + status_code + gross_amount_str + settings.MIDTRANS_SERVER_KEY).encode('utf-8')
+        ).hexdigest()
+
+        if my_signature != signature_key:
+            return HttpResponse('Invalid signature', status=403)
+
+        # Proses status pembayaran
+
+        transaction_status = data.get('transaction_status')
+
+        order = get_object_or_404(Order, id=order_id)
+        order_payment = OrderPayment.objects.filter(order=order).first()
+
+        with transaction.atomic():
+            if order_payment:
+                order_payment.transaction_status = data.get('transaction_status')
+                order_payment.status_message = data.get('status_message')
+                
+                
+
+                if transaction_status == 'settlement':
+                    order_payment.settlement_time = data.get('settlement_time')
+
+                    order.status = 'paid'
+                    order.save()
+
+                order_payment.save()
+            else:
+            # Jika tidak ada OrderPayment, buat yang baru
+                OrderPayment.objects.create(
+                    order=order,
+                    transaction_time=data.get('transaction_time'),
+                    transaction_status=data.get('transaction_status'),
+                    transaction_id=data.get('transaction_id'),
+                    status_message=data.get('status_message'),
+                    status_code=status_code,
+                    signature_key=signature_key,
+                    settlement_time=data.get('settlement_time'),
+                    payment_type=data.get('payment_type'),
+                    merchant_id=data.get('merchant_id'),
+                    gross_amount=gross_amount,
+                    fraud_status=data.get('fraud_status'),
+                    expiry_time=data.get('expiry_time'),
+                    currency=data.get('currency'),
+                    biller_code=data.get('biller_code'),
+                    bill_key=data.get('bill_key')
+                )
+
+        
+        # Lakukan update status pesanan di database sesuai order_id
+
+        return HttpResponse('OK', status=200)
+
+    return HttpResponse('Only POST allowed', status=405)
 
 @login_required
 def add_to_cart(request):
@@ -212,7 +289,7 @@ def checkout(request):
 
                 snap_params = {
                     "transaction_details": {
-                        "order_id": f"ORDER-{order.id}",
+                        "order_id": order.id,
                         "gross_amount": order.total,
                     },
                     "customer_details": {
