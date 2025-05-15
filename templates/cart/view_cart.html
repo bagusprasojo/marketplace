@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+{% load cart_filters %}
+
+{% block content_top %}
+ <!-- Cart Start -->
+ <div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12 table-responsive">
+            {% if cart_items %}
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Design</th>
+                        <th>Jumlah</th>
+                        <th>Harga Satuan</th>
+                        <th>Total</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.design.name }}<br>{{ item.product_color.product.name }},{{ item.product_color.color.name }}, {{ item.product_detail.size }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>Rp{{ item.price|intcomma }}</td>
+                        <td>Rp{{ item.price|mul:item.quantity|intcomma }}</td>
+                        <td>
+                            <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-danger btn-sm">
+                                Hapus
+                            </a>
+                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="text-right">
+                <h5>Total: 
+                    Rp{{ cart_items|cart_total|intcomma }}
+                </h5>
+                <a class="btn btn-primary my-3 py-3" href="{% url 'checkout' %}">Proceed To Checkout</a>
+            </div>
+
+            {% else %}
+            <div class="alert alert-info">
+                Keranjang belanja kamu masih kosong.
+            </div>
+            {% endif %} 
+        </div>
+        
+    </div>
+</div>
+<!-- Cart End -->
+{% endblock%}
+
+{% block content %}
+
+
+{% endblock%}

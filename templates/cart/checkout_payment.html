@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load cart_filters %}
+
+
+
+
+
+{% block content_top %}
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h2>Konfirmasi Pembayaran</h2>
+        <p class="text-muted">Silakan klik tombol di bawah untuk melakukan pembayaran</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5>Ringkasan Order</h5>
+            
+            <ul class="list-group mb-3">
+                {% for item in order.items.all %}
+                <li class="list-group-item d-flex justify-content-between lh-condensed">
+                    <div>
+                        <h6 class="my-0">{{ item.design.name }}</h6>
+                        <small class="text-muted">{{ item.product_detail.size }} / {{ item.product_color.color.name }}</small>
+                    </div>
+                    <span class="text-muted">Rp{{ item.price|intcomma }} x {{ item.quantity }}</span>
+                </li>
+                {% endfor %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Subtotal</span>
+                    <strong>Rp{{ order.total_harga_barang|intcomma }}</strong>
+                </li>
+                {% if order.diskon_rupiah > 0 or order.diskon_persen > 0 %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Diskon</span>
+                    <strong>- Rp{{ order.diskon_rupiah|add:order.total_harga_barang|mul:order.diskon_persen|div:100|intcomma }}</strong>
+                </li>
+                {% endif %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Ongkos Kirim</span>
+                    <strong>Rp{{ order.ongkos_kirim|intcomma }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Total</span>
+                    <strong>Rp{{ order.total|intcomma }}</strong>
+                </li>
+            </ul>
+            
+            <div class="text-center">
+                <button id="pay-button" class="btn btn-success btn-lg mt-3">Bayar Sekarang</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Snap.js -->
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ client_key }}"></script>
+
+<script>
+    document.getElementById('pay-button').addEventListener('click', function () {
+        snap.pay('{{ snap_token }}', {
+            onSuccess: function(result) {
+                console.log("Pembayaran berhasil:", result);
+                window.location.href = "{% url 'order_success' %}";
+            },
+            onPending: function(result) {
+                console.log("Pembayaran tertunda:", result);
+                window.location.href = "{% url 'order_success' %}";
+            },
+            onError: function(result) {
+                console.log("Terjadi kesalahan:", result);
+                alert("Terjadi kesalahan saat memproses pembayaran.");
+            },
+            onClose: function() {
+                alert("Kamu menutup popup pembayaran.");
+            }
+        });
+    });
+</script>
+{% endblock %}

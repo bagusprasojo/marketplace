@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+{% load cart_filters %}
+
+{% block content_top %}
+ <!-- Cart Start -->
+ <div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-7">
+            
+                
+                    <h6 class="mb-2">Alamat</h6>
+                    <div class="input-group mb-3">
+                        <select onchange="load_alamat()" name="alamat_id" id="alamat-select" class="custom-select">                    
+                            {% for alamat in alamats %}
+                                <option value="{{ alamat.id }}" {% if alamat.is_default == 1 %}selected{% endif %}>
+                                    {{ alamat.nama_alamat }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+                    <div class="mb-4" id="alamat-detail"></div>
+                    
+                    
+                    <h6 class="mb-2">Daftar Belanja</h6>
+                    <div class="table-responsive">
+                        {% if cart_items %}
+                            <table class="table table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Design</th>
+                                        <th>Jumlah</th>                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                    <tr>
+                                        <td>{{ item.design.name }}<br>{{ item.product_color.product.name }},{{ item.product_color.color.name }}, {{ item.product_detail.size }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %} 
+                    </div>                    
+                
+        </div>
+        <div class="col-lg-5">
+            <h6 class="mb-2">Pilih Metode Pengiriman</h6>
+            <div class="input-group mb-3">
+                <select onchange="load_ekspedisi_details()" name="ekspedisi" id="ekspedisi" class="custom-select mr-2">
+                    {% for item in ekspedisis %}
+                        <option value="{{ item.id }}">{{ item.name }}</option>
+                    {% endfor %}                    
+                </select>
+                <select onchange="load_data_hitungan()" id="service" name="service" class="custom-select"></select>   
+            </div>
+
+            <!-- <h6 class="mb-2">Pilih Metode Pembayaran</h6>
+            <div class="input-group mb-3">
+                <select name="payment_method" class="custom-select">
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="credit_card">Kartu Kredit</option>
+                    <option value="paypal">PayPal</option>
+                </select>
+            </div>  
+                     -->
+            <div class="card border-secondary mb-5">
+                <div class="card-header bg-secondary border-0">
+                    <h4 class="font-weight-semi-bold m-0">Order Total</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3 pt-1">
+                        <h6 class="font-weight-medium">Subtotal</h6>
+                        <h6 id="sub-total" class="font-weight-medium">0</h6>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <h6 class="font-weight-medium">Shipping</h6>
+                        <h6 id="shipping" class="font-weight-medium">0</h6>
+                    </div>
+                </div>
+                <div class="card-footer border-secondary bg-transparent">
+                    <div class="d-flex justify-content-between mt-2">
+                        <h5 class="font-weight-bold">Total</h5>
+                        <h5 id="total" class="font-weight-bold">0</h5>
+                    </div>
+                </div>
+
+                <div class="card-footer border-secondary bg-transparent">
+                    <button onclick="place_order()" class="btn btn-lg btn-block btn-primary font-weight-bold my-3 py-3">Place Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+ 
+<!-- Cart End -->
+{% endblock%}
+
+{% block content %}
+
+
+{% endblock%}
+
+{% block content_script %}  
+<script>
+    function load_ekspedisi_details() {
+        var ekspedisi_id = document.getElementById("ekspedisi").value;
+        if (!ekspedisi_id) {
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'get_ekspedisi_details' 0 %}".replace('0', ekspedisi_id),
+            type: "GET",
+            success: function(data) {
+                // Kosongkan opsi sebelumnya
+                var $serviceSelect = $('select[name="service"]');
+                $serviceSelect.empty();
+
+                if (data.details && data.details.length > 0) {
+                    // Tambahkan opsi dari JSON
+                    $.each(data.details, function(index, service) {
+                        $serviceSelect.append(
+                            $('<option></option>')
+                                .val(service.id) // atau pakai service.id jika perlu
+                                .text(service.name)
+                        );
+                    });
+
+                    load_data_hitungan(); // Load hitungan setelah ekspedisi dipilih
+                    
+                } else {
+                    $serviceSelect.append('<option value="">Tidak ada layanan tersedia</option>');                
+                }
+            },
+            error: function(xhr, status, error) {            
+                console.error("Error loading ekspedisi details:", error);
+            }
+        });
+    }
+
+    function load_data_hitungan() {
+        var alamat_id = document.getElementById("alamat-select").value;
+        var service_id = document.getElementById("service").value;
+
+        $.ajax({
+            url: "{% url 'get_data_hitungan' 111 222 %}".replace('111', alamat_id).replace('222', service_id),
+            type: "GET",
+            success: function(data) {
+                // Pastikan datanya berupa angka
+                var subTotal = Number(data.sub_total);
+                var ongkir = Number(data.ongkir);
+                var total = Number(data.total);
+
+                // Format dengan pemisah ribuan (locale Indonesia)
+                $('#sub-total').html(subTotal.toLocaleString('id-ID'));
+                $('#shipping').html(ongkir.toLocaleString('id-ID'));
+                $('#total').html(total.toLocaleString('id-ID'));
+            },
+            error: function(xhr, status, error) {
+                $('#alamat-detail').html("Gagal memuat alamat.");
+                console.error("Error loading address:", error);
+            }
+        });
+    }
+
+    function place_order() {
+        var alamat_id = document.getElementById("alamat-select").value;
+        var service_id = document.getElementById("service").value;
+        // var payment_method = $('select[name="payment_method"]').val();
+
+        $.ajax({
+            url: "{% url 'checkout' %}",
+            type: "POST",
+            data: {
+                alamat_id: alamat_id,
+                service_id: service_id,                
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(data) {
+                console.log("Order placed successfully:", data);
+                console.log("Snap token:", data.snap_token);
+                console.log("Order ID:", data.order_id);
+
+                var url = "{% url 'payment' 'abc' 123 %}".replace('abc', data.snap_token).replace('123', data.order_id);
+                console.log("Redirecting to payment URL:", url);
+                // Redirect to order confirmation page
+                window.location.href = url;
+            },
+            error: function(xhr, status, error) {
+                console.error("Error placing order:", error);
+            }
+        });
+    }
+
+    function load_alamat() {
+        var alamat_id = document.getElementById("alamat-select").value;
+        
+        if (!alamat_id) {
+        $('#alamat-detail').html('Silakan pilih alamat terlebih dahulu.');
+        return;
+        }
+
+        $.ajax({
+        url: "{% url 'get_alamat' 0 %}".replace('0', alamat_id),
+        type: "GET",
+        success: function(data) {
+            $('#alamat-detail').html(data.alamat_lengkap);
+            load_data_hitungan(); // Load hitungan setelah alamat dipilih
+        },
+        error: function(xhr, status, error) {
+            $('#alamat-detail').html("Gagal memuat alamat.");
+            console.error("Error loading address:", error);
+        }
+        });
+    }
+
+  $(document).ready(function() {
+    load_alamat(); // Load the default address on page load
+    load_ekspedisi_details(); // Load the default ekspedisi details on page load
+    
+});
+</script>
+
+
+{% endblock%}
