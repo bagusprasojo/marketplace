@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-mjq2d0d8vt6#g&-p-3e_8^c@q#7!#t5c412s58tk774v=)s@6e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['triantobogor59.pythonanywhere.com', '127.0.0.1', 'localhost']
+
 
 
 # Application definition
@@ -85,10 +86,10 @@ WSGI_APPLICATION = 'marketplace.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'marketplace',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
+        'NAME': 'triantobogor59$marketplace',
+        'USER': 'triantobogor59',
+        'PASSWORD': '@buZaid1980',
+        'HOST': 'triantobogor59.mysql.pythonanywhere-services.com',
         'PORT': '3306',
     }
 }
