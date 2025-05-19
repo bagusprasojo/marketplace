@@ -2,21 +2,7 @@
 {% load static %}
 
 {% block content_top %}
-<!-- Page Header Start -->
-<div class="container-fluid bg-secondary mb-5">
-    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 300px">
-        <h1 class="font-weight-semi-bold text-uppercase mb-3">Shop Detail</h1>
-        <div class="d-inline-flex">
-            <p class="m-0"><a href="{% url 'home' %}">Home</a></p>
-            <p class="m-0 px-2">-</p>
-            <p class="m-0">Shop Detail</p>
-        </div>
-    </div>
-</div>
-<!-- Page Header End -->
-{% endblock%}
 
-{% block content %}
 
 
 
@@ -36,7 +22,7 @@
         </div>
         <div class="modal-footer justify-content-center">
           <a href="{% url 'view_cart' %}" class="btn btn-primary">Lihat Keranjang</a>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Lanjut Belanja</button>
+          <a href="{% url 'home' %}" data-bs-dismiss="modal" class="btn btn-primary">Lanjut Belanja</a>
         </div>
       </div>
     </div>
@@ -65,7 +51,7 @@
 
         <div class="col-lg-7 pb-5">
             <h3 class="font-weight-semi-bold">{{design.name}}</h3>
-            <input type="text" id="design_id" value="{{design.id}}">
+            <input type="hidden" id="design_id" value="{{design.id}}">
             <div class="d-flex mb-3">
                 <div class="text-primary mr-2">
                     <small class="fas fa-star"></small>
@@ -243,7 +229,9 @@
 </div>
 <!-- Shop Detail End -->
 
+{% endblock %}
 
+{% block content %}
 <!-- Products Start -->
 <div class="container-fluid py-5">
     <div class="text-center mb-4">

@@ -40,7 +40,7 @@ def payment_notification(request):
             order_id=order_id,
             payload=data
         )
-        
+
         status_code = data.get('status_code')
 
         gross_amount_str = data.get('gross_amount', '0')
@@ -248,9 +248,13 @@ def checkout(request):
     user = request.user
     cart_items = CartItem.objects.filter(user=user, is_ordered=False)
     alamats = Alamat.objects.filter(user=user)
+    # print(f"Cart Items: {cart_items}")
+    print(f"Alamats: {alamats}")
     ekspedisis = Ekspedisi.objects.filter(is_active=True)
     
     if request.method == 'POST':
+        print("POST request received")
+        print(f"Request POST: {request.POST}")
         try:
             with transaction.atomic():
                 # Ambil data dari request
@@ -280,6 +284,7 @@ def checkout(request):
                     ekspedisi=ekspedisi_detail.ekspedisi,
                 )
                 
+                print(f"Order created: {order}")
                 for item in cart_items:
                     OrderItem.objects.create(
                         order=order,
@@ -291,6 +296,7 @@ def checkout(request):
                     )
                     # item.is_ordered = True
                     item.save()
+                print(f"Order items created for order: {order.id}")
 
                 snap_params = {
                     "transaction_details": {
@@ -303,6 +309,7 @@ def checkout(request):
                     },
                 }
 
+                print(f"Snap params: {snap_params}")
                 # Dapatkan snap_token
                 snap_token = snap.create_transaction(snap_params)['token']
                 data = {
@@ -311,12 +318,14 @@ def checkout(request):
                     'client_key': settings.MIDTRANS_CLIENT_KEY
                 }
 
+                print(f"Snap Token: {snap_token}")
+                print(f"Data: {data}")
                 return JsonResponse(data)
                 # return JsonResponse({'order_id': order.id, 'snap_token': snap_token, 'client_key': settings.MIDTRANS_CLIENT_KEY}, status=200)
                 
 
         except Exception as e:
-            # Opsional: log error atau tampilkan pesan kesalahan
+            print("Checkout Error:", e)    
             return render(request, 'cart/checkout.html', {
                 'cart_items': cart_items,
                 'alamats': alamats,
