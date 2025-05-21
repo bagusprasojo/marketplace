@@ -190,7 +190,7 @@
                 var url = "{% url 'payment' 'abc' 123 %}".replace('abc', data.snap_token).replace('123', data.order_id);
                 console.log("Redirecting to payment URL:", url);
                 // Redirect to order confirmation page
-                window.location.href = url;
+                // window.location.href = url;
             },
             error: function(xhr, status, error) {
                 console.error("Error placing order:", error);
