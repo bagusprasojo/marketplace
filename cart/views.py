@@ -245,6 +245,8 @@ def get_ekspedisi_details(request, ekspedisi_id):
 
 @login_required
 def checkout(request):
+    print("Checkout view called")
+    print(f"Request user: {request.user}")
     user = request.user
     cart_items = CartItem.objects.filter(user=user, is_ordered=False)
     alamats = Alamat.objects.filter(user=user)
@@ -259,9 +261,11 @@ def checkout(request):
             with transaction.atomic():
                 # Ambil data dari request
                 alamat_id = request.POST.get('alamat_id')
+                print(f"Alamat ID: {alamat_id}")
                 alamat = Alamat.objects.get(id=alamat_id, user=user)
 
                 service_id = request.POST.get('service_id')
+                print(f"Service ID: {service_id}")
                 ekspedisi_detail = EkspedisiDetail.objects.get(id=service_id, is_active=True)   
                 
                 total_barang = sum(item.quantity * item.price for item in cart_items)

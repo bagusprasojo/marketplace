@@ -172,10 +172,11 @@
     function place_order() {
         var alamat_id = document.getElementById("alamat-select").value;
         var service_id = document.getElementById("service").value;
-        // var payment_method = $('select[name="payment_method"]').val();
+        var url_x = "{% url 'checkout' %}";
+        console.log("URL :", url_x);
 
         $.ajax({
-            url: "{% url 'checkout' %}",
+            url: url_x,
             type: "POST",
             data: {
                 alamat_id: alamat_id,
@@ -187,10 +188,10 @@
                 console.log("Snap token:", data.snap_token);
                 console.log("Order ID:", data.order_id);
 
-                var url = "{% url 'payment' 'abc' 123 %}".replace('abc', data.snap_token).replace('123', data.order_id);
-                console.log("Redirecting to payment URL:", url);
+                var url_y = "{% url 'payment' 'abc' 123 %}".replace('abc', data.snap_token).replace('123', data.order_id);
+                console.log("Redirecting to payment URL:", url_y);
                 // Redirect to order confirmation page
-                // window.location.href = url;
+                // window.location.href = url_y;
             },
             error: function(xhr, status, error) {
                 console.error("Error placing order:", error);
